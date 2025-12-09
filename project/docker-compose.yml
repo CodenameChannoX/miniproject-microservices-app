@@ -1,0 +1,59 @@
+
+
+services:
+  # PostgreSQL for Auth Service
+  postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # MongoDB for Product Service
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  # Auth Service
+  auth-service:
+    build: ./backend/auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: auth_db
+      JWT_SECRET: your-secret-key
+    depends_on:
+      - postgres
+
+  # Product Service
+  product-service:
+    build: ./backend/auth-service
+    ports:
+      - "3002:3002"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/product_db
+    depends_on:
+      - mongodb
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - product-service
+
+volumes:
+  postgres_data:
+  mongodb_data:
